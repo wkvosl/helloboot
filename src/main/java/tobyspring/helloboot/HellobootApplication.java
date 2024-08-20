@@ -4,9 +4,11 @@ import java.io.IOException;
 
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,37 +20,36 @@ public class HellobootApplication {
 	public static void main(String[] args) {
 //		SpringApplication.run(HellobootApplication.class, args);
 		
-		//톰캣 시작 : 내장톰캣 불러오기
-		TomcatServletWebServerFactory serverFactory = new TomcatServletWebServerFactory();
-//		ServletWebServerFactory serverFactory = new TomcatServletWebServerFactory(); //ServletWebServerFactory으로 받아도 됨.
+		TomcatServletWebServerFactory serverFactory = new TomcatServletWebServerFactory(); 
+		WebServer webServer = serverFactory.getWebServer(servletContext -> {		
+			servletContext.addServlet("frontcontroller", new HttpServlet() {
+				private static final long serialVersionUID = 1L;
 
-		
-		/*
-		//익명클래스 생성
-		WebServer webServer = serverFactory.getWebServer(new ServletContextInitializer() {
-
-			@Override
-			public void onStartup(ServletContext servletContext) throws ServletException {
-				
-			}
-			
-		}); //서블릿 컨테이너를 만드는 생성함수.
-		*/
-		
-		//위 소스가 람다식으로 변경됨. 단축키 Ctrl + 1
-		WebServer webServer = serverFactory.getWebServer(servletContext -> {
-			servletContext.addServlet("hello", new HttpServlet() {
-
-				protected void service(HttpServletRequest req, HttpServletResponse resp)
-						throws ServletException, IOException {
-					// TODO Auto-generated method stub
-					resp.setStatus(200);
-					resp.setHeader("Content-Type", "text/plain");
-					resp.getWriter().print("Hello Servlet");
+				@Override
+				protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+					
+					// 인증, 보안, 다국어, 공통 기능을 만들고
+					
+					if(req.getRequestURI().equals("/hello") && req.getMethod().equals(HttpMethod.GET.name())){
+						String name = req.getParameter("name");
+						
+						resp.setStatus(HttpStatus.OK.value());
+						resp.setHeader(HttpHeaders.CONTENT_TYPE.toString(), MediaType.TEXT_PLAIN.toString());
+						resp.getWriter().print("Hello Servlet : " + name);
+					}
+					
+					else if (req.getRequestURI().equals("/user")) {
+						// 로직
+					}
+					
+					else {
+						resp.setStatus(HttpStatus.NOT_FOUND.value());
+					}
+					
 				}
 				
-			}).addMapping("/hello");
-		}); //서블릿 컨테이너를 만드는 생성함수.
+			}).addMapping("/*");
+		}); 
 		
 		webServer.start();
 		

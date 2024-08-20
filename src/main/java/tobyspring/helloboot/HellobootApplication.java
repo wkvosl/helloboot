@@ -22,6 +22,9 @@ public class HellobootApplication {
 		
 		TomcatServletWebServerFactory serverFactory = new TomcatServletWebServerFactory(); 
 		WebServer webServer = serverFactory.getWebServer(servletContext -> {		
+			
+			HelloController helloController = new HelloController();
+			
 			servletContext.addServlet("frontcontroller", new HttpServlet() {
 				private static final long serialVersionUID = 1L;
 
@@ -33,9 +36,11 @@ public class HellobootApplication {
 					if(req.getRequestURI().equals("/hello") && req.getMethod().equals(HttpMethod.GET.name())){
 						String name = req.getParameter("name");
 						
+						String ret = helloController.hello(name);
+						
 						resp.setStatus(HttpStatus.OK.value());
 						resp.setHeader(HttpHeaders.CONTENT_TYPE.toString(), MediaType.TEXT_PLAIN.toString());
-						resp.getWriter().print("Hello Servlet : " + name);
+						resp.getWriter().print("Hello Servlet : " + ret);
 					}
 					
 					else if (req.getRequestURI().equals("/user")) {

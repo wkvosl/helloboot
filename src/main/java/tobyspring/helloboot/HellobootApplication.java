@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -20,11 +22,14 @@ public class HellobootApplication {
 	public static void main(String[] args) {
 //		SpringApplication.run(HellobootApplication.class, args);
 		
+		//스프링컨테이너
+		GenericApplicationContext appCon = new GenericApplicationContext();
+		appCon.registerBean(HelloController.class); //bean 등록 끝.
+		appCon.refresh(); //초기화 : 빈 오브젝트 생성
+		
+		
 		TomcatServletWebServerFactory serverFactory = new TomcatServletWebServerFactory(); 
 		WebServer webServer = serverFactory.getWebServer(servletContext -> {		
-			
-			HelloController helloController = new HelloController();
-			
 			servletContext.addServlet("frontcontroller", new HttpServlet() {
 				private static final long serialVersionUID = 1L;
 
@@ -36,15 +41,11 @@ public class HellobootApplication {
 					if(req.getRequestURI().equals("/hello") && req.getMethod().equals(HttpMethod.GET.name())){
 						String name = req.getParameter("name");
 						
+						HelloController helloController = appCon.getBean(HelloController.class);
 						String ret = helloController.hello(name);
 						
-						resp.setStatus(HttpStatus.OK.value());
-						resp.setHeader(HttpHeaders.CONTENT_TYPE.toString(), MediaType.TEXT_PLAIN.toString());
+						resp.setContentType(MediaType.TEXT_PLAIN_VALUE);
 						resp.getWriter().print("Hello Servlet : " + ret);
-					}
-					
-					else if (req.getRequestURI().equals("/user")) {
-						// 로직
 					}
 					
 					else {
